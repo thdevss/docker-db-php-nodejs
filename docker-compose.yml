@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  db:
+    image: mysql:8
+    ports:
+      - 3396:3306
+    volumes:
+      - ./data:/var/lib/mysql
+    env_file:
+      - .env
+      
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    depends_on:
+      - db
+    ports:
+      - 8081:80
+    environment:
+      - PMA_HOST=db
+
+  web:
+    build:
+      context: .
+      dockerfile: ./build/php/Dockerfile
+    working_dir: /var/www/html
+    volumes:
+      - ./app/www:/var/www/html
+    ports:
+      - "80:80"
+    env_file:
+      - .env
+    command: >
+      sh -c "cd /var/www/html && php artisan migrate --env=local --no-interaction -vvv && php artisan serve --host=0.0.0.0 --port=80"
+
+  worker:
+    image: node:latest
+    working_dir: /usr/src/app
+    depends_on:
+      - web
+    env_file:
+      - .env
+    volumes:
+      - ./app/bot:/usr/src/app
+    command: >
+      sh -c "npm install && npm start"
