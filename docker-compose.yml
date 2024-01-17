@@ -42,6 +42,6 @@ services:
     env_file:
       - .env
     volumes:
-      - ./app/bot:/usr/src/app
+      - ./app/worker:/usr/src/app
     command: >
       sh -c "npm install && npm start"
